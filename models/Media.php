@@ -1,9 +1,9 @@
 <?php
 
 abstract class Media{
-    private string $titre;
-    private string $auteur;
-    private bool $disponible;
+    protected string $titre;
+    protected string $auteur;
+    protected bool $disponible;
 
     public function __construct(string $titre, string $auteur, bool $disponible){
         $this->titre = $titre;
@@ -11,7 +11,7 @@ abstract class Media{
         $this->disponible = $disponible;
     }
 
-    public function emprunter(): void {
+    public function borrow(): void {
         if ($this->disponible) {
             $this->disponible = false;
             echo "Vous avez emprunté " . $this->titre;
@@ -21,7 +21,7 @@ abstract class Media{
     }
     
 
-    public function rendre(): void {
+    public function giveBack(): void {
         if (!$this->disponible) {
             $this->disponible = true;
             echo "Vous avez rendu  " . $this->titre;
