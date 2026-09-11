@@ -1,7 +1,7 @@
 <?php
 
 function connection(){
-    $serveur = "loaclhost";
+    $serveur = "localhost";
     $utilisateur = "root";
     $mdp = "";
     $bdd = "bachelorMVC";
