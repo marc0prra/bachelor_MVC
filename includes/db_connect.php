@@ -3,7 +3,7 @@
 function connection(){
     $serveur = "localhost";
     $utilisateur = "root";
-    $mdp = "";
+    $mdp = "root";
     $bdd = "bachelorMVC";
 
     try {

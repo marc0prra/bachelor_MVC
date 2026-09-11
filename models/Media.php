@@ -1,14 +1,16 @@
 <?php
 
+include("includes/db_connect.php");
+
 abstract class Media{
     protected int $id;
-    protected string $titre;
-    protected string $auteur;
+    protected string $title;
+    protected string $author;
     protected bool $disponible;
 
-    public function __construct(string $titre, string $auteur, bool $disponible){
-        $this->titre = $titre;
-        $this->auteur = $auteur;
+    public function __construct(string $title, string $author, bool $disponible){
+        $this->title = $title;
+        $this->author = $author;
         $this->disponible = $disponible;
     }
 
@@ -21,32 +23,32 @@ abstract class Media{
         $this->id = $id;
     }
 
-    public function getTitre(): string {
-        return $this->titre;
+    public function getTitle(): string {
+        return $this->title;
     }
 
-    public function setTitre(string $titre): void {
-        $this->titre = $titre;
+    public function setTtitle(string $title): void {
+        $this->title = $title;
     }
 
     public function isDisponible(): bool {
         return $this->disponible;
     }
 
-    public function getAuteur(): string{
-        return $this->auteur;
+    public function getauthor(): string{
+        return $this->author;
     }
 
-    public function setAuteur(string $auteur): void {
-        $this->auteur = $auteur;
+    public function setauthor(string $author): void {
+        $this->author = $author;
     }
 
     public function borrow(): void {
         if ($this->disponible) {
             $this->disponible = false;
-            echo "Vous avez emprunté " . $this->titre;
+            echo "Vous avez emprunté " . $this->title;
         } else {
-            echo $this->titre . " n'est pas disponible";
+            echo $this->title . " n'est pas disponible";
         }
     }
     
@@ -54,23 +56,50 @@ abstract class Media{
     public function giveBack(): void {
         if (!$this->disponible) {
             $this->disponible = true;
-            echo "Vous avez rendu  " . $this->titre;
+            echo "Vous avez rendu  " . $this->title;
         } else {
-            echo $this->titre . " n'a pas été emprunté, impossible de le rendre";
+            echo $this->title . " n'a pas été emprunté, impossible de le rendre";
         }
     }
 
-
-    public function getBookById($id){
+    public static function getMedias() {
         try {
             $db = connection();
-            $stmt = $db->prepare("SELECT * FROM Book WHERE id = :id");
+            $stmt = $db->prepare("SELECT * FROM Media");
+            $stmt->execute();
+            $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $books;
+        } catch (PDOException $e) {
+            die('Erreur de requête : ' . $e->getMessage());
+        }
+    }
+
+    public function getMediaById(int $id){
+        try {
+            $db = connection();
+            $stmt = $db->prepare("SELECT * FROM Media WHERE id = :id");
             $stmt->bindValue(":id", $id, PDO::PARAM_INT);
             $stmt->execute();
-            $book = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $book;
+            $media = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $media;
         } catch (PDOException $e) {
             die ("Erreur lors de la requete : " . $e->getMessage());
+        }
+    }
+
+    public function update(int $id, string $title, string $author, bool $disponible) {
+        try {
+            $db = connection();
+            $stmt = $db->prepare('UPDATE media
+                SET title = :title, auhtor = :author, disponible = :disponible
+                WHERE id = :id');
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':title', $title, PDO::PARAM_STR);
+            $stmt->bindValue(':author', $author, PDO::PARAM_STR);
+            $stmt->bindValue(':disponible', $disponible, PDO::PARAM_INT);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die('Erreur de requête : ' . $e->getMessage());
         }
     }
 }

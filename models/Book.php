@@ -18,16 +18,4 @@ class Book extends Media {
     public function setPageNumber(int $pageNumber): void {
         $this->pageNumber = $pageNumber;
     }
-
-    public static function getBooks() {
-        try {
-            $db = connection();
-            $stmt = $db->prepare("SELECT * FROM books ORDER BY published_year ASC");
-            $stmt->execute();
-            $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $books;
-        } catch (PDOException $e) {
-            die('Erreur de requête : ' . $e->getMessage());
-        }
-    }
 }

@@ -32,7 +32,6 @@ if (isset($_GET['action']) && !empty($_GET['action'])) {
         }
     }
 } else {
-    require_once('controllers/BookController.php');
-    library();
+    require_once(ROOT . 'controllers/MediaController.php');
+    MediaController::library();
 }
-
