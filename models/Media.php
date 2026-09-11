@@ -1,6 +1,7 @@
 <?php
 
 abstract class Media{
+    protected int $id;
     protected string $titre;
     protected string $auteur;
     protected bool $disponible;
@@ -9,6 +10,35 @@ abstract class Media{
         $this->titre = $titre;
         $this->auteur = $auteur;
         $this->disponible = $disponible;
+    }
+
+
+    public function getId(): int {
+        return $this->id;
+    }
+
+    public function setId(int $id): void {
+        $this->id = $id;
+    }
+
+    public function getTitre(): string {
+        return $this->titre;
+    }
+
+    public function setTitre(string $titre): void {
+        $this->titre = $titre;
+    }
+
+    public function isDisponible(): bool {
+        return $this->disponible;
+    }
+
+    public function getAuteur(): string{
+        return $this->auteur;
+    }
+
+    public function setAuteur(string $auteur): void {
+        $this->auteur = $auteur;
     }
 
     public function borrow(): void {
@@ -30,15 +60,17 @@ abstract class Media{
         }
     }
 
-    public function getTitre(): string {
-        return $this->titre;
-    }
 
-    public function isDisponible(): bool {
-        return $this->disponible;
-    }
-
-    public function getAuteur(): string{
-        return $this->auteur;
+    public function getBookById($id){
+        try {
+            $db = connection();
+            $stmt = $db->prepare("SELECT * FROM Book WHERE id = :id");
+            $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+            $book = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $book;
+        } catch (PDOException $e) {
+            die ("Erreur lors de la requete : " . $e->getMessage());
+        }
     }
 }
