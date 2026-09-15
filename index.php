@@ -2,6 +2,7 @@
 
 define('ROOT', str_replace('index.php', '', $_SERVER['SCRIPT_FILENAME']));
 session_start();
+require_once('includes/auth.php');
 
 if (isset($_GET['action']) && !empty($_GET['action'])) {
     $params = explode('/', $_GET['action']);
@@ -15,7 +16,7 @@ if (isset($_GET['action']) && !empty($_GET['action'])) {
         if (file_exists($controllerFile)) {
             require_once($controllerFile);
 
-            if (method_exists($controllerClass, $action)) {
+            if (is_callable([$controllerClass, $action])) {
                 if (isset($params[2]) && isset($params[3])) {
                     call_user_func([$controllerClass, $action], $params[2], $params[3]);
                 } elseif (isset($params[2])) {

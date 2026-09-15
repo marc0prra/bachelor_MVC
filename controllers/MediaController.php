@@ -1,5 +1,6 @@
 <?php
 
+require_once("includes/auth.php");
 require_once("models/Media.php");
 require_once("models/Book.php");
 require_once("models/Movie.php");
@@ -17,12 +18,14 @@ class MediaController {
         $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
 
         $medias = Media::getAll($sortBy, $direction);
-        $message = self::consumeFlash();
+        $message = consumeFlash();
 
         require_once('views/library.php');
     }
 
     static function add(string $type) {
+        requireAuth();
+
         if (!in_array($type, self::TYPES, true)) {
             self::redirectToLibrary("Type de média inconnu.");
         }
@@ -53,6 +56,8 @@ class MediaController {
     }
 
     static function update(int $id) {
+        requireAuth();
+
         $media = Media::find($id);
 
         if (!$media) {
@@ -84,6 +89,8 @@ class MediaController {
     }
 
     static function delete(int $id) {
+        requireAuth();
+
         $media = Media::find($id);
 
         if (!$media) {
@@ -95,6 +102,8 @@ class MediaController {
     }
 
     static function borrow(int $id) {
+        requireAuth();
+
         $media = Media::find($id);
 
         if (!$media) {
@@ -107,6 +116,8 @@ class MediaController {
     }
 
     static function giveBack(int $id) {
+        requireAuth();
+
         $media = Media::find($id);
 
         if (!$media) {
@@ -119,17 +130,8 @@ class MediaController {
     }
 
     private static function redirectToLibrary(string $message): void {
-        $_SESSION['flash'] = $message;
+        setFlash($message);
         header('Location: index.php?action=Media/library');
         exit();
-    }
-
-    private static function consumeFlash(): ?string {
-        if (isset($_SESSION['flash'])) {
-            $message = $_SESSION['flash'];
-            unset($_SESSION['flash']);
-            return $message;
-        }
-        return null;
     }
 }

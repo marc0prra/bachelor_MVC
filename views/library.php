@@ -25,18 +25,30 @@ function sortLink(string $column, string $label, ?string $sortBy, string $direct
     <title>Médiathèque</title>
 </head>
 <body>
+    <p>
+        <?php if (isAuthenticated()): ?>
+            Connecté en tant que <strong><?= htmlspecialchars($_SESSION['username']) ?></strong> —
+            <a href="index.php?action=User/logout">Se déconnecter</a>
+        <?php else: ?>
+            <a href="index.php?action=User/login">Se connecter</a> |
+            <a href="index.php?action=User/signin">S'inscrire</a>
+        <?php endif; ?>
+    </p>
+
     <h1>Médiathèque (<?= count($medias) ?> médias)</h1>
 
     <?php if (!empty($message)): ?>
         <p><strong><?= htmlspecialchars($message) ?></strong></p>
     <?php endif; ?>
 
-    <p>
-        Ajouter :
-        <a href="index.php?action=Media/add/book">un livre</a> |
-        <a href="index.php?action=Media/add/movie">un film</a> |
-        <a href="index.php?action=Media/add/album">un album</a>
-    </p>
+    <?php if (isAuthenticated()): ?>
+        <p>
+            Ajouter :
+            <a href="index.php?action=Media/add/book">un livre</a> |
+            <a href="index.php?action=Media/add/movie">un film</a> |
+            <a href="index.php?action=Media/add/album">un album</a>
+        </p>
+    <?php endif; ?>
 
     <table border="1" cellpadding="6" cellspacing="0">
         <thead>
@@ -66,16 +78,18 @@ function sortLink(string $column, string $label, ?string $sortBy, string $direct
                 </td>
                 <td><?= $media->isDisponible() ? 'Disponible' : 'Emprunté' ?></td>
                 <td>
-                    <?php if ($media->isDisponible()): ?>
-                        <a href="index.php?action=Media/borrow/<?= $media->getId() ?>">Emprunter</a>
-                    <?php else: ?>
-                        <a href="index.php?action=Media/giveBack/<?= $media->getId() ?>">Rendre</a>
+                    <?php if (isAuthenticated()): ?>
+                        <?php if ($media->isDisponible()): ?>
+                            <a href="index.php?action=Media/borrow/<?= $media->getId() ?>">Emprunter</a>
+                        <?php else: ?>
+                            <a href="index.php?action=Media/giveBack/<?= $media->getId() ?>">Rendre</a>
+                        <?php endif; ?>
+                        |
+                        <a href="index.php?action=Media/update/<?= $media->getId() ?>">Modifier</a>
+                        |
+                        <a href="index.php?action=Media/delete/<?= $media->getId() ?>"
+                           onclick="return confirm('Supprimer ce média ?');">Supprimer</a>
                     <?php endif; ?>
-                    |
-                    <a href="index.php?action=Media/update/<?= $media->getId() ?>">Modifier</a>
-                    |
-                    <a href="index.php?action=Media/delete/<?= $media->getId() ?>"
-                       onclick="return confirm('Supprimer ce média ?');">Supprimer</a>
                 </td>
             </tr>
         <?php endforeach; ?>
