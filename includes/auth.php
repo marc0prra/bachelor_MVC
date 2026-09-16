@@ -2,6 +2,9 @@
 
 require_once("includes/flash.php");
 
+/**
+ * @return bool True si un utilisateur est connecté.
+ */
 function isAuthenticated(): bool {
     return isset($_SESSION['user_id']);
 }

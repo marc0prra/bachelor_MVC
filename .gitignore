@@ -1,0 +1,4 @@
+assets/uploads/media/*
+!assets/uploads/media/.gitkeep
+
+*.pdf

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Ouvre (ou réutilise) la connexion PDO à la base de données du projet.
+ * @return PDO La connexion active.
+ */
 function connection(){
     $serveur = "localhost";
     $utilisateur = "root";

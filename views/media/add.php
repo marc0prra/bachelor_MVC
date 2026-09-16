@@ -20,7 +20,7 @@ require_once('views/partials/header.php');
             <div class="flash flash-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form action="index.php?action=Media/add/<?= htmlspecialchars($type) ?>" method="post">
+        <form action="index.php?action=Media/add/<?= htmlspecialchars($type) ?>" method="post" enctype="multipart/form-data">
             <div class="form-field">
                 <label for="title">Titre</label>
                 <input type="text" id="title" name="title" value="<?= htmlspecialchars($_POST['title'] ?? '') ?>" required>
@@ -28,6 +28,11 @@ require_once('views/partials/header.php');
             <div class="form-field">
                 <label for="author">Auteur</label>
                 <input type="text" id="author" name="author" value="<?= htmlspecialchars($_POST['author'] ?? '') ?>" required>
+            </div>
+            <div class="form-field">
+                <label for="illustration">Illustration</label>
+                <input type="file" id="illustration" name="illustration" accept="image/jpeg,image/png,image/webp,image/gif">
+                <small>JPEG, PNG, WEBP ou GIF, 2 Mo maximum.</small>
             </div>
             <div class="form-field">
                 <label class="form-checkbox">

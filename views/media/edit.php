@@ -22,7 +22,7 @@ require_once('views/partials/header.php');
             <div class="flash flash-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form action="index.php?action=Media/update/<?= $media->getId() ?>" method="post">
+        <form action="index.php?action=Media/update/<?= $media->getId() ?>" method="post" enctype="multipart/form-data">
             <div class="form-field">
                 <label for="title">Titre</label>
                 <input type="text" id="title" name="title" value="<?= htmlspecialchars($isPost ? ($_POST['title'] ?? '') : $media->getTitle()) ?>" required>
@@ -30,6 +30,14 @@ require_once('views/partials/header.php');
             <div class="form-field">
                 <label for="author">Auteur</label>
                 <input type="text" id="author" name="author" value="<?= htmlspecialchars($isPost ? ($_POST['author'] ?? '') : $media->getAuthor()) ?>" required>
+            </div>
+            <div class="form-field">
+                <label for="illustration">Illustration</label>
+                <?php if ($media->getIllustration() !== null): ?>
+                    <img class="illustration-preview" src="assets/uploads/media/<?= htmlspecialchars($media->getIllustration()) ?>" alt="Illustration actuelle de <?= htmlspecialchars($media->getTitle()) ?>">
+                <?php endif; ?>
+                <input type="file" id="illustration" name="illustration" accept="image/jpeg,image/png,image/webp,image/gif">
+                <small>JPEG, PNG, WEBP ou GIF, 2 Mo maximum. Laisser vide pour conserver l'illustration actuelle.</small>
             </div>
 
             <?php if ($media instanceof Book): ?>
