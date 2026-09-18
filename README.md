@@ -78,49 +78,7 @@ index.php?action=User/logout                                 → déconnexion
 
 ## Base de données
 
-Le schéma n'est pas fourni sous forme de fichier `.sql` dans le dépôt ; il se déduit des requêtes des modèles. Il utilise une table `Media` commune et une table fille par type (héritage par table concrète), reliées par clé étrangère avec suppression en cascade :
-
-```sql
-CREATE DATABASE IF NOT EXISTS bachelorMVC CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE bachelorMVC;
-
-CREATE TABLE Media (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    titre        VARCHAR(255) NOT NULL,
-    auteur       VARCHAR(255) NOT NULL,
-    disponible   TINYINT(1) NOT NULL DEFAULT 1,
-    illustration VARCHAR(255) NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE Book (
-    id         INT PRIMARY KEY,
-    pageNumber INT NOT NULL,
-    FOREIGN KEY (id) REFERENCES Media(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE Movie (
-    id       INT PRIMARY KEY,
-    duration FLOAT NOT NULL,
-    gender   VARCHAR(20) NOT NULL, -- Action | Comedie | Drame | Autre (validé côté app)
-    FOREIGN KEY (id) REFERENCES Media(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE Album (
-    id          INT PRIMARY KEY,
-    trackNumber INT NOT NULL,
-    editor      VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id) REFERENCES Media(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE users (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    username   VARCHAR(255) NOT NULL UNIQUE,
-    email      VARCHAR(255) NOT NULL UNIQUE,
-    password   VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
-) ENGINE=InnoDB;
-```
+Base `bachelorMVC`. Le schéma complet (tables, clés étrangères, contraintes) est disponible dans [`bachelorMVC.sql`](./bachelorMVC.sql) à la racine du projet.
 
 ## Installation
 
@@ -138,7 +96,7 @@ CREATE TABLE users (
    cd bachelor_MVC
    ```
 
-2. **Créer la base de données** en exécutant le script SQL ci-dessus (ou en l'adaptant) sur votre serveur MySQL/MariaDB.
+2. **Créer la base de données** en important le dump `bachelorMVC.sql` (ou en exécutant le script SQL ci-dessus) sur votre serveur MySQL/MariaDB.
 
 3. **Configurer la connexion** dans `includes/db_connect.php` (hôte, utilisateur, mot de passe, nom de la base) selon votre environnement local.
 
@@ -153,3 +111,5 @@ CREATE TABLE users (
    ```
 
 6. **Ouvrir l'application** : http://localhost:8000/
+
+7. **Se connecter** : pour accéder aux fonctionnalités réservées (ajout/modification/suppression, emprunt, tableau de bord), créez votre propre compte via la page d'inscription (`index.php?action=User/signin`).
