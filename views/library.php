@@ -85,7 +85,7 @@ require_once('views/partials/header.php');
             <article class="media-card">
                 <?php if ($media->getIllustration() !== null): ?>
                     <img class="media-card-illustration" loading="lazy" decoding="async"
-                         src="assets/uploads/media/<?= htmlspecialchars($media->getIllustration()) ?>"
+                         src="<?= htmlspecialchars($media->getIllustration()->getPath()) ?>"
                          alt="Illustration de <?= htmlspecialchars($media->getTitle()) ?>">
                 <?php else: ?>
                     <div class="media-card-illustration media-card-illustration-placeholder type-<?= $media->getType() ?>">

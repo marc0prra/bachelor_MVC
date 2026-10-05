@@ -59,7 +59,7 @@ require_once('views/partials/header.php');
                     <tr>
                         <td>
                             <?php if ($media->getIllustration() !== null): ?>
-                                <img class="dashboard-thumb" loading="lazy" decoding="async" src="assets/uploads/media/<?= htmlspecialchars($media->getIllustration()) ?>" alt="Illustration de <?= htmlspecialchars($media->getTitle()) ?>">
+                                <img class="dashboard-thumb" loading="lazy" decoding="async" src="<?= htmlspecialchars($media->getIllustration()->getPath()) ?>" alt="Illustration de <?= htmlspecialchars($media->getTitle()) ?>">
                             <?php else: ?>
                                 <div class="dashboard-thumb dashboard-thumb-placeholder type-<?= $media->getType() ?>"></div>
                             <?php endif; ?>

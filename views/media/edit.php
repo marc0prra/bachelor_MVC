@@ -34,7 +34,12 @@ require_once('views/partials/header.php');
             <div class="form-field">
                 <label for="illustration">Illustration</label>
                 <?php if ($media->getIllustration() !== null): ?>
-                    <img class="illustration-preview" src="assets/uploads/media/<?= htmlspecialchars($media->getIllustration()) ?>" alt="Illustration actuelle de <?= htmlspecialchars($media->getTitle()) ?>">
+                    <img class="illustration-preview" src="<?= htmlspecialchars($media->getIllustration()->getPath()) ?>" alt="Illustration actuelle de <?= htmlspecialchars($media->getTitle()) ?>">
+                    <small>
+                        <?= htmlspecialchars($media->getIllustration()->getOriginalName()) ?>
+                        · <?= max(1, (int) ceil($media->getIllustration()->getSize() / 1024)) ?> Ko
+                        · envoyé le <?= date('d/m/Y à H:i', strtotime($media->getIllustration()->getUploadedAt())) ?>
+                    </small>
                 <?php endif; ?>
                 <input type="file" id="illustration" name="illustration" accept="image/jpeg,image/png,image/webp,image/gif">
                 <small>JPEG, PNG, WEBP ou GIF, 2 Mo maximum. Laisser vide pour conserver l'illustration actuelle.</small>

@@ -54,6 +54,23 @@ INSERT INTO `Book` (`id`, `pageNumber`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `Files`
+--
+
+CREATE TABLE `Files` (
+  `id` int NOT NULL,
+  `media_id` int NOT NULL,
+  `original_name` varchar(255) NOT NULL,
+  `stored_name` varchar(255) NOT NULL,
+  `size` int UNSIGNED NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `uploaded_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `uploaded_by` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `Media`
 --
 
@@ -61,17 +78,16 @@ CREATE TABLE `Media` (
   `id` int NOT NULL,
   `titre` varchar(255) NOT NULL,
   `auteur` varchar(255) NOT NULL,
-  `disponible` tinyint(1) NOT NULL,
-  `illustration` varchar(255) DEFAULT NULL
+  `disponible` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Déchargement des données de la table `Media`
 --
 
-INSERT INTO `Media` (`id`, `titre`, `auteur`, `disponible`, `illustration`) VALUES
-(1, 'oui', 'ouais', 1, NULL),
-(2, 'avenger', 'stan lee', 1, NULL);
+INSERT INTO `Media` (`id`, `titre`, `auteur`, `disponible`) VALUES
+(1, 'oui', 'ouais', 1),
+(2, 'avenger', 'stan lee', 1);
 
 -- --------------------------------------------------------
 
@@ -147,6 +163,15 @@ ALTER TABLE `Book`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Index pour la table `Files`
+--
+ALTER TABLE `Files`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `stored_name` (`stored_name`),
+  ADD KEY `media_id` (`media_id`),
+  ADD KEY `uploaded_by` (`uploaded_by`);
+
+--
 -- Index pour la table `Media`
 --
 ALTER TABLE `Media`
@@ -184,6 +209,12 @@ ALTER TABLE `Book`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT pour la table `Files`
+--
+ALTER TABLE `Files`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT pour la table `Media`
 --
 ALTER TABLE `Media`
@@ -210,6 +241,13 @@ ALTER TABLE `Album`
 --
 ALTER TABLE `Book`
   ADD CONSTRAINT `fk_book_media` FOREIGN KEY (`id`) REFERENCES `Media` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `Files`
+--
+ALTER TABLE `Files`
+  ADD CONSTRAINT `fk_files_media` FOREIGN KEY (`media_id`) REFERENCES `Media` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_files_user` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `Movie`

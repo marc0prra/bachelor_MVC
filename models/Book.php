@@ -16,10 +16,9 @@ class Book extends Media {
      * @param bool $disponible Disponibilité initiale.
      * @param int $pageNumber Nombre de pages.
      * @param int|null $id Identifiant en base, ou null pour un livre pas encore persisté.
-     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      */
-    public function __construct(string $title, string $author, bool $disponible, int $pageNumber, ?int $id = null, ?string $illustration = null) {
-        parent::__construct($title, $author, $disponible, $id, $illustration);
+    public function __construct(string $title, string $author, bool $disponible, int $pageNumber, ?int $id = null) {
+        parent::__construct($title, $author, $disponible, $id);
         $this->pageNumber = $pageNumber;
     }
 
@@ -57,8 +56,7 @@ class Book extends Media {
             return 'Le nombre de pages doit être supérieur à 0.';
         }
 
-        $illustration = $data['illustration'] ?? null;
-        return self::create($title, $author, $disponible, $pageNumber, $illustration);
+        return self::create($title, $author, $disponible, $pageNumber);
     }
 
     /**
@@ -72,7 +70,6 @@ class Book extends Media {
         }
 
         $this->setPageNumber($pageNumber);
-        $this->applyIllustrationFormData($data);
         return null;
     }
 
@@ -82,11 +79,10 @@ class Book extends Media {
      * @param string $author Auteur du livre.
      * @param bool $disponible Disponibilité initiale.
      * @param int $pageNumber Nombre de pages.
-     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      * @return Book Le livre créé.
      */
-    public static function create(string $title, string $author, bool $disponible, int $pageNumber, ?string $illustration = null): Book {
-        $id = self::insertBase($title, $author, $disponible, $illustration);
+    public static function create(string $title, string $author, bool $disponible, int $pageNumber): Book {
+        $id = self::insertBase($title, $author, $disponible);
 
         try {
             $db = connection();
@@ -98,7 +94,7 @@ class Book extends Media {
             die('Erreur de requête : ' . $e->getMessage());
         }
 
-        return new Book($title, $author, $disponible, $pageNumber, $id, $illustration);
+        return new Book($title, $author, $disponible, $pageNumber, $id);
     }
 
     /**

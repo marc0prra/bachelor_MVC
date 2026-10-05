@@ -1,6 +1,7 @@
 <?php
 
 require_once("includes/db_connect.php");
+require_once("File.php");
 
 /**
  * Class Media
@@ -19,8 +20,8 @@ abstract class Media {
     /** @var bool Indique si le média est disponible à l'emprunt. */
     protected bool $disponible;
 
-    /** @var string|null Nom du fichier d'illustration stocké dans assets/uploads/media/, ou null si absent. */
-    protected ?string $illustration;
+    /** @var File|null Illustration du média (table Files), ou null si absente. */
+    protected ?File $illustration = null;
 
     /**
      * Colonnes autorisées pour le tri, mappées vers les colonnes SQL réelles.
@@ -37,16 +38,14 @@ abstract class Media {
      * @param string $author Auteur du média.
      * @param bool $disponible Disponibilité initiale du média.
      * @param int|null $id Identifiant en base, ou null pour un média pas encore persisté.
-     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      */
-    public function __construct(string $title, string $author, bool $disponible, ?int $id = null, ?string $illustration = null) {
+    public function __construct(string $title, string $author, bool $disponible, ?int $id = null) {
         if ($id !== null) {
             $this->id = $id;
         }
         $this->title = $title;
         $this->author = $author;
         $this->disponible = $disponible;
-        $this->illustration = $illustration;
     }
 
     /**
@@ -99,28 +98,17 @@ abstract class Media {
     }
 
     /**
-     * @return string|null Le nom du fichier d'illustration, ou null si absent.
+     * @return File|null L'illustration du média, ou null si absente.
      */
-    public function getIllustration(): ?string {
+    public function getIllustration(): ?File {
         return $this->illustration;
     }
 
     /**
-     * @param string|null $illustration Le nouveau nom de fichier d'illustration, ou null pour le retirer.
+     * @param File|null $illustration La nouvelle illustration, ou null pour la retirer.
      */
-    public function setIllustration(?string $illustration): void {
+    public function setIllustration(?File $illustration): void {
         $this->illustration = $illustration;
-    }
-
-    /**
-     * Applique l'illustration transmise dans les données d'un formulaire, si une nouvelle a été fournie.
-     * Ne fait rien si la clé est absente, afin de conserver l'illustration existante.
-     * @param array $data Données du formulaire ($_POST), éventuellement complétées par le contrôleur avec la clé 'illustration'.
-     */
-    protected function applyIllustrationFormData(array $data): void {
-        if (array_key_exists('illustration', $data)) {
-            $this->setIllustration($data['illustration']);
-        }
     }
 
     /**
@@ -186,7 +174,7 @@ abstract class Media {
     public static function getAll(?string $sortBy = null, string $direction = 'asc'): array {
         try {
             $db = connection();
-            $sql = "SELECT m.id, m.titre, m.auteur, m.disponible, m.illustration,
+            $sql = "SELECT m.id, m.titre, m.auteur, m.disponible,
                            b.pageNumber,
                            mv.duration, mv.gender,
                            a.trackNumber, a.editor
@@ -202,9 +190,15 @@ abstract class Media {
 
             $stmt = $db->prepare($sql);
             $stmt->execute();
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $medias = array_map([self::class, 'hydrate'], $stmt->fetchAll(PDO::FETCH_ASSOC));
 
-            return array_map([self::class, 'hydrate'], $rows);
+            // Chargement des illustrations en une seule requête pour tous les médias.
+            $files = File::findByMediaIds(array_map(fn(Media $media) => $media->getId(), $medias));
+            foreach ($medias as $media) {
+                $media->setIllustration($files[$media->getId()] ?? null);
+            }
+
+            return $medias;
         } catch (PDOException $e) {
             die('Erreur de requête : ' . $e->getMessage());
         }
@@ -263,7 +257,7 @@ abstract class Media {
     public static function find(int $id): ?Media {
         try {
             $db = connection();
-            $stmt = $db->prepare("SELECT m.id, m.titre, m.auteur, m.disponible, m.illustration,
+            $stmt = $db->prepare("SELECT m.id, m.titre, m.auteur, m.disponible,
                                           b.pageNumber,
                                           mv.duration, mv.gender,
                                           a.trackNumber, a.editor
@@ -276,14 +270,21 @@ abstract class Media {
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            return $row ? self::hydrate($row) : null;
+            if (!$row) {
+                return null;
+            }
+
+            $media = self::hydrate($row);
+            $media->setIllustration(File::findByMedia($media->getId()));
+            return $media;
         } catch (PDOException $e) {
             die('Erreur de requête : ' . $e->getMessage());
         }
     }
 
     /**
-     * Supprime un média (la suppression se propage à Book/Movie/Album via ON DELETE CASCADE).
+     * Supprime un média (la suppression se propage à Book/Movie/Album/Files via ON DELETE CASCADE).
+     * Les fichiers physiques doivent être supprimés au préalable via File::delete().
      * @param int $id Identifiant du média à supprimer.
      * @return bool True si la suppression a réussi.
      */
@@ -308,18 +309,17 @@ abstract class Media {
         $author = $row['auteur'];
         $disponible = (bool) $row['disponible'];
         $id = (int) $row['id'];
-        $illustration = $row['illustration'];
 
         if ($row['pageNumber'] !== null) {
-            return new Book($title, $author, $disponible, (int) $row['pageNumber'], $id, $illustration);
+            return new Book($title, $author, $disponible, (int) $row['pageNumber'], $id);
         }
 
         if ($row['duration'] !== null) {
-            return new Movie($title, $author, $disponible, (float) $row['duration'], $row['gender'], $id, $illustration);
+            return new Movie($title, $author, $disponible, (float) $row['duration'], $row['gender'], $id);
         }
 
         if ($row['trackNumber'] !== null) {
-            return new Album($title, $author, $disponible, (int) $row['trackNumber'], $row['editor'], $id, $illustration);
+            return new Album($title, $author, $disponible, (int) $row['trackNumber'], $row['editor'], $id);
         }
 
         throw new RuntimeException("Media #$id n'a pas de sous-type correspondant (Book/Movie/Album).");
@@ -330,36 +330,33 @@ abstract class Media {
      * @param string $title Titre du média.
      * @param string $author Auteur du média.
      * @param bool $disponible Disponibilité initiale.
-     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      * @return int L'identifiant généré par la base de données.
      */
-    protected static function insertBase(string $title, string $author, bool $disponible, ?string $illustration = null): int {
+    protected static function insertBase(string $title, string $author, bool $disponible): int {
         $db = connection();
-        $stmt = $db->prepare('INSERT INTO Media (titre, auteur, disponible, illustration) VALUES (:titre, :auteur, :disponible, :illustration)');
+        $stmt = $db->prepare('INSERT INTO Media (titre, auteur, disponible) VALUES (:titre, :auteur, :disponible)');
         $stmt->bindValue(':titre', $title, PDO::PARAM_STR);
         $stmt->bindValue(':auteur', $author, PDO::PARAM_STR);
         $stmt->bindValue(':disponible', $disponible, PDO::PARAM_INT);
-        $stmt->bindValue(':illustration', $illustration, PDO::PARAM_STR);
         $stmt->execute();
 
         return (int) $db->lastInsertId();
     }
 
     /**
-     * Met à jour les champs communs (titre, auteur, disponible, illustration) du média courant.
+     * Met à jour les champs communs (titre, auteur, disponible) du média courant.
      * @return bool True si la mise à jour a réussi.
      */
     protected function updateBase(): bool {
         try {
             $db = connection();
             $stmt = $db->prepare('UPDATE Media
-                SET titre = :titre, auteur = :auteur, disponible = :disponible, illustration = :illustration
+                SET titre = :titre, auteur = :auteur, disponible = :disponible
                 WHERE id = :id');
             $stmt->bindValue(':id', $this->id, PDO::PARAM_INT);
             $stmt->bindValue(':titre', $this->title, PDO::PARAM_STR);
             $stmt->bindValue(':auteur', $this->author, PDO::PARAM_STR);
             $stmt->bindValue(':disponible', $this->disponible, PDO::PARAM_INT);
-            $stmt->bindValue(':illustration', $this->illustration, PDO::PARAM_STR);
             return $stmt->execute();
         } catch (PDOException $e) {
             die('Erreur de requête : ' . $e->getMessage());

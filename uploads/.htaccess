@@ -1,0 +1,5 @@
+# Seules des images sont servies depuis ce dossier : aucun script ne doit y être exécuté.
+<FilesMatch "\.(php|phtml|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes -ExecCGI
