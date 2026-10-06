@@ -2,7 +2,7 @@
 
 Application web de gestion d'une médiathèque (livres, films, albums) développée en PHP natif selon une architecture **MVC maison**, dans le cadre d'un projet d'école (Bachelor).
 
-Elle permet de consulter, rechercher et trier le catalogue de médias publiquement, et, une fois authentifié, d'ajouter/modifier/supprimer des médias, de gérer leurs illustrations et de suivre les emprunts/retours depuis un tableau de bord.
+Elle permet de consulter, rechercher et trier le catalogue de médias publiquement, et, une fois authentifié, d'ajouter/modifier/supprimer des médias et de suivre les emprunts/retours depuis un tableau de bord.
 
 ## Stack technique
 
@@ -22,7 +22,6 @@ Elle permet de consulter, rechercher et trier le catalogue de médias publiqueme
 - **Authentification** : inscription, connexion, déconnexion. Mot de passe soumis à une politique de sécurité (8 caractères min., majuscule, minuscule, chiffre, caractère spécial, ne contenant pas le nom d'utilisateur).
 - **Gestion des médias** (réservée aux utilisateurs connectés) :
   - Ajout / modification / suppression de livres, films et albums, chacun avec ses champs spécifiques (nombre de pages, durée + genre, nombre de pistes + éditeur).
-  - Upload d'une illustration par média (JPEG/PNG/WEBP/GIF, 2 Mo max), stockée dans `assets/uploads/media/`.
   - Emprunt / retour d'un média, avec mise à jour de la disponibilité.
 - **Tableau de bord** : statistiques (total, disponibles, empruntés) et liste tabulaire des médias.
 - **Messages flash** : confirmation/erreur affichés après une action puis effacés (auto-disparition côté JS après quelques secondes).
@@ -33,7 +32,7 @@ Elle permet de consulter, rechercher et trier le catalogue de médias publiqueme
 bachelor_MVC/
 ├── index.php                  # Contrôleur frontal / routeur
 ├── controllers/
-│   ├── MediaController.php    # CRUD médias, upload illustration, emprunt/retour
+│   ├── MediaController.php    # CRUD médias, emprunt/retour
 │   └── UserController.php     # Inscription, connexion, déconnexion
 ├── models/
 │   ├── Media.php               # Classe abstraite commune (Book/Movie/Album)
@@ -52,8 +51,7 @@ bachelor_MVC/
 │   └── flash.php               # Messages flash en session
 └── assets/
     ├── css/style.css
-    ├── js/app.js
-    └── uploads/media/          # Illustrations uploadées (ignoré par git)
+    └── js/app.js
 ```
 
 ## Routage
@@ -100,16 +98,11 @@ Base `bachelorMVC`. Le schéma complet (tables, clés étrangères, contraintes)
 
 3. **Configurer la connexion** dans `includes/db_connect.php` (hôte, utilisateur, mot de passe, nom de la base) selon votre environnement local.
 
-4. **Rendre le dossier d'uploads accessible en écriture**
-   ```bash
-   chmod -R 755 assets/uploads/media
-   ```
-
-5. **Lancer le serveur** depuis la racine du projet (celle-ci doit être la racine web, `index.php` compris) :
+4. **Lancer le serveur** depuis la racine du projet (celle-ci doit être la racine web, `index.php` compris) :
    ```bash
    php -S localhost:8000
    ```
 
-6. **Ouvrir l'application** : http://localhost:8000/
+5. **Ouvrir l'application** : http://localhost:8000/
 
-7. **Se connecter** : pour accéder aux fonctionnalités réservées (ajout/modification/suppression, emprunt, tableau de bord), créez votre propre compte via la page d'inscription (`index.php?action=User/signin`).
+6. **Se connecter** : pour accéder aux fonctionnalités réservées (ajout/modification/suppression, emprunt, tableau de bord), créez votre propre compte via la page d'inscription (`index.php?action=User/signin`).

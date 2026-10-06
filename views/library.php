@@ -83,19 +83,6 @@ require_once('views/partials/header.php');
     <div class="media-grid">
         <?php foreach ($medias as $media): ?>
             <article class="media-card">
-                <?php if ($media->getIllustration() !== null): ?>
-                    <img class="media-card-illustration" loading="lazy" decoding="async"
-                         src="assets/uploads/media/<?= htmlspecialchars($media->getIllustration()) ?>"
-                         alt="Illustration de <?= htmlspecialchars($media->getTitle()) ?>">
-                <?php else: ?>
-                    <div class="media-card-illustration media-card-illustration-placeholder type-<?= $media->getType() ?>">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                        </svg>
-                    </div>
-                <?php endif; ?>
-
                 <div class="media-card-top">
                     <span class="media-type type-<?= $media->getType() ?>"><?= $typeLabels[$media->getType()] ?></span>
                     <?php if ($media->isDisponible()): ?>

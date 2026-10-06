@@ -54,6 +54,21 @@ INSERT INTO `Book` (`id`, `pageNumber`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `File`
+--
+
+CREATE TABLE `File` (
+  `id` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `name_type` varchar(100) NOT NULL,
+  `size` int UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `Media`
 --
 
@@ -61,17 +76,16 @@ CREATE TABLE `Media` (
   `id` int NOT NULL,
   `titre` varchar(255) NOT NULL,
   `auteur` varchar(255) NOT NULL,
-  `disponible` tinyint(1) NOT NULL,
-  `illustration` varchar(255) DEFAULT NULL
+  `disponible` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Déchargement des données de la table `Media`
 --
 
-INSERT INTO `Media` (`id`, `titre`, `auteur`, `disponible`, `illustration`) VALUES
-(2, 'avenger', 'stan lee', 0, NULL),
-(7, 'yfsegduofbv', 'ejbfkbe', 0, NULL);
+INSERT INTO `Media` (`id`, `titre`, `auteur`, `disponible`) VALUES
+(2, 'avenger', 'stan lee', 0),
+(7, 'yfsegduofbv', 'ejbfkbe', 0);
 
 -- --------------------------------------------------------
 
@@ -149,6 +163,12 @@ ALTER TABLE `Book`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Index pour la table `File`
+--
+ALTER TABLE `File`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `Media`
 --
 ALTER TABLE `Media`
@@ -184,6 +204,12 @@ ALTER TABLE `Users`
 --
 ALTER TABLE `Book`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT pour la table `File`
+--
+ALTER TABLE `File`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `Media`

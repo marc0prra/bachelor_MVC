@@ -47,7 +47,6 @@ require_once('views/partials/header.php');
         <table class="dashboard-table">
             <thead>
                 <tr>
-                    <th></th>
                     <th>Titre</th>
                     <th>Type</th>
                     <th>Auteur</th>
@@ -57,13 +56,6 @@ require_once('views/partials/header.php');
             <tbody>
                 <?php foreach ($medias as $media): ?>
                     <tr>
-                        <td>
-                            <?php if ($media->getIllustration() !== null): ?>
-                                <img class="dashboard-thumb" loading="lazy" decoding="async" src="assets/uploads/media/<?= htmlspecialchars($media->getIllustration()) ?>" alt="Illustration de <?= htmlspecialchars($media->getTitle()) ?>">
-                            <?php else: ?>
-                                <div class="dashboard-thumb dashboard-thumb-placeholder type-<?= $media->getType() ?>"></div>
-                            <?php endif; ?>
-                        </td>
                         <td><?= htmlspecialchars($media->getTitle()) ?></td>
                         <td><span class="media-type type-<?= $media->getType() ?>"><?= $typeLabels[$media->getType()] ?></span></td>
                         <td><?= htmlspecialchars($media->getAuthor()) ?></td>
