@@ -238,14 +238,6 @@ abstract class Media {
             return true;
         }
 
-        $maxDistance = min(3, max(1, (int) floor(mb_strlen($query) / 2)));
-
-        foreach (preg_split('/\s+/', $haystack) as $word) {
-            if (levenshtein($word, $query) <= $maxDistance) {
-                return true;
-            }
-        }
-
         return false;
     }
 
