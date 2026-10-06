@@ -1,5 +1,4 @@
-uploads/*
-!uploads/.gitkeep
-!uploads/.htaccess
+assets/uploads/media/*
+!assets/uploads/media/.gitkeep
 
 *.pdf

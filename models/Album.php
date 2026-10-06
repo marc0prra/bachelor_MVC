@@ -20,9 +20,10 @@ class Album extends Media {
      * @param int $trackNumber Nombre de pistes.
      * @param string $editor Éditeur de l'album.
      * @param int|null $id Identifiant en base, ou null pour un album pas encore persisté.
+     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      */
-    public function __construct(string $title, string $author, bool $disponible, int $trackNumber, string $editor, ?int $id = null) {
-        parent::__construct($title, $author, $disponible, $id);
+    public function __construct(string $title, string $author, bool $disponible, int $trackNumber, string $editor, ?int $id = null, ?string $illustration = null) {
+        parent::__construct($title, $author, $disponible, $id, $illustration);
         $this->trackNumber = $trackNumber;
         $this->editor = $editor;
     }
@@ -76,7 +77,8 @@ class Album extends Media {
             return 'Nombre de pistes ou éditeur invalide.';
         }
 
-        return self::create($title, $author, $disponible, $trackNumber, $editor);
+        $illustration = $data['illustration'] ?? null;
+        return self::create($title, $author, $disponible, $trackNumber, $editor, $illustration);
     }
 
     /**
@@ -92,6 +94,7 @@ class Album extends Media {
 
         $this->setTrackNumber($trackNumber);
         $this->setEditor($editor);
+        $this->applyIllustrationFormData($data);
         return null;
     }
 
@@ -102,10 +105,11 @@ class Album extends Media {
      * @param bool $disponible Disponibilité initiale.
      * @param int $trackNumber Nombre de pistes.
      * @param string $editor Éditeur de l'album.
+     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      * @return Album L'album créé.
      */
-    public static function create(string $title, string $author, bool $disponible, int $trackNumber, string $editor): Album {
-        $id = self::insertBase($title, $author, $disponible);
+    public static function create(string $title, string $author, bool $disponible, int $trackNumber, string $editor, ?string $illustration = null): Album {
+        $id = self::insertBase($title, $author, $disponible, $illustration);
 
         try {
             $db = connection();
@@ -118,7 +122,7 @@ class Album extends Media {
             die('Erreur de requête : ' . $e->getMessage());
         }
 
-        return new Album($title, $author, $disponible, $trackNumber, $editor, $id);
+        return new Album($title, $author, $disponible, $trackNumber, $editor, $id, $illustration);
     }
 
     /**

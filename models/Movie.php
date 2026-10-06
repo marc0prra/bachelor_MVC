@@ -23,9 +23,10 @@ class Movie extends Media {
      * @param float $duration Durée en minutes.
      * @param string $gender Genre du film, parmi Movie::GENDERS.
      * @param int|null $id Identifiant en base, ou null pour un film pas encore persisté.
+     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      */
-    public function __construct(string $title, string $author, bool $disponible, float $duration, string $gender, ?int $id = null) {
-        parent::__construct($title, $author, $disponible, $id);
+    public function __construct(string $title, string $author, bool $disponible, float $duration, string $gender, ?int $id = null, ?string $illustration = null) {
+        parent::__construct($title, $author, $disponible, $id, $illustration);
         $this->duration = $duration;
         $this->gender = $gender;
     }
@@ -79,7 +80,8 @@ class Movie extends Media {
             return 'Durée ou genre invalide.';
         }
 
-        return self::create($title, $author, $disponible, $duration, $gender);
+        $illustration = $data['illustration'] ?? null;
+        return self::create($title, $author, $disponible, $duration, $gender, $illustration);
     }
 
     /**
@@ -95,6 +97,7 @@ class Movie extends Media {
 
         $this->setDuration($duration);
         $this->setGender($gender);
+        $this->applyIllustrationFormData($data);
         return null;
     }
 
@@ -105,10 +108,11 @@ class Movie extends Media {
      * @param bool $disponible Disponibilité initiale.
      * @param float $duration Durée en minutes.
      * @param string $gender Genre du film, parmi Movie::GENDERS.
+     * @param string|null $illustration Nom du fichier d'illustration, ou null si absent.
      * @return Movie Le film créé.
      */
-    public static function create(string $title, string $author, bool $disponible, float $duration, string $gender): Movie {
-        $id = self::insertBase($title, $author, $disponible);
+    public static function create(string $title, string $author, bool $disponible, float $duration, string $gender, ?string $illustration = null): Movie {
+        $id = self::insertBase($title, $author, $disponible, $illustration);
 
         try {
             $db = connection();
@@ -121,7 +125,7 @@ class Movie extends Media {
             die('Erreur de requête : ' . $e->getMessage());
         }
 
-        return new Movie($title, $author, $disponible, $duration, $gender, $id);
+        return new Movie($title, $author, $disponible, $duration, $gender, $id, $illustration);
     }
 
     /**

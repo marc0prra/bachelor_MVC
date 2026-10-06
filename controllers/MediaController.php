@@ -5,7 +5,6 @@ require_once("models/Media.php");
 require_once("models/Book.php");
 require_once("models/Movie.php");
 require_once("models/Album.php");
-require_once("models/File.php");
 
 /**
  * Class MediaController
@@ -16,6 +15,19 @@ class MediaController {
 
     private const TYPES = ['book', 'movie', 'album'];
     private const SORTABLE = ['title', 'author', 'disponible'];
+
+    /** Dossier public de stockage des illustrations, relatif à la racine du projet. */
+    private const ILLUSTRATION_DIR = 'assets/uploads/media/';
+
+    private const ILLUSTRATION_MAX_SIZE = 2 * 1024 * 1024;
+
+    /** Extensions autorisées, indexées par type MIME détecté. */
+    private const ILLUSTRATION_MIME_TYPES = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+    ];
 
     /**
      * Affiche la médiathèque, triée et filtrée par recherche approximative si demandé.
@@ -76,27 +88,30 @@ class MediaController {
             $title = trim($_POST['title'] ?? '');
             $author = trim($_POST['author'] ?? '');
             $disponible = isset($_POST['disponible']);
-            $upload = self::getIllustrationUpload();
 
             if ($title === '' || $author === '') {
                 $error = "Le titre et l'auteur sont obligatoires.";
-            } elseif ($upload !== null && ($error = File::validateUpload($upload)) !== null) {
-                // Fichier refusé avant toute écriture en base : $error est affiché dans le formulaire.
             } else {
-                /** @var class-string<Media> $class */
-                $class = ucfirst($type);
-                $result = $class::fromFormData($title, $author, $disponible, $_POST);
+                [$illustration, $error] = self::handleIllustrationUpload();
 
-                if (is_string($result)) {
-                    $error = $result;
-                } else {
-                    if ($upload !== null) {
-                        $file = File::store($upload, $result->getId(), $_SESSION['user_id']);
-                        if (is_string($file)) {
-                            self::redirectToLibrary("Média ajouté, mais l'illustration n'a pas pu être enregistrée : " . $file);
-                        }
+                if ($error === null) {
+                    $data = $_POST;
+                    if ($illustration !== null) {
+                        $data['illustration'] = $illustration;
                     }
-                    self::redirectToLibrary('Média ajouté avec succès.');
+
+                    /** @var class-string<Media> $class */
+                    $class = ucfirst($type);
+                    $result = $class::fromFormData($title, $author, $disponible, $data);
+
+                    if (is_string($result)) {
+                        if ($illustration !== null) {
+                            self::deleteIllustrationFile($illustration);
+                        }
+                        $error = $result;
+                    } else {
+                        self::redirectToLibrary('Média ajouté avec succès.');
+                    }
                 }
             }
         }
@@ -122,31 +137,36 @@ class MediaController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $author = trim($_POST['author'] ?? '');
-            $upload = self::getIllustrationUpload();
 
             if ($title === '' || $author === '') {
                 $error = "Le titre et l'auteur sont obligatoires.";
-            } elseif ($upload !== null && ($error = File::validateUpload($upload)) !== null) {
-                // Fichier refusé avant toute modification : $error est affiché dans le formulaire.
             } else {
-                $media->setTitle($title);
-                $media->setAuthor($author);
-
-                $error = $media->applyFormData($_POST);
+                [$illustration, $error] = self::handleIllustrationUpload();
 
                 if ($error === null) {
-                    $media->update();
+                    $previousIllustration = $media->getIllustration();
 
-                    if ($upload !== null) {
-                        $file = File::store($upload, $media->getId(), $_SESSION['user_id']);
-                        if (is_string($file)) {
-                            self::redirectToLibrary("Média modifié, mais l'illustration n'a pas pu être enregistrée : " . $file);
-                        }
-                        // La nouvelle illustration est enregistrée : l'ancienne peut être supprimée.
-                        $media->getIllustration()?->delete();
+                    $media->setTitle($title);
+                    $media->setAuthor($author);
+
+                    $data = $_POST;
+                    if ($illustration !== null) {
+                        $data['illustration'] = $illustration;
                     }
 
-                    self::redirectToLibrary('Média modifié avec succès.');
+                    $error = $media->applyFormData($data);
+
+                    if ($error === null) {
+                        $media->update();
+
+                        if ($illustration !== null && $previousIllustration !== null) {
+                            self::deleteIllustrationFile($previousIllustration);
+                        }
+
+                        self::redirectToLibrary('Média modifié avec succès.');
+                    } elseif ($illustration !== null) {
+                        self::deleteIllustrationFile($illustration);
+                    }
                 }
             }
         }
@@ -167,8 +187,11 @@ class MediaController {
             self::redirectToLibrary('Média introuvable.');
         }
 
-        $media->getIllustration()?->delete();
         Media::delete($id);
+
+        if ($media->getIllustration() !== null) {
+            self::deleteIllustrationFile($media->getIllustration());
+        }
 
         self::redirectToLibrary('Média supprimé avec succès.');
     }
@@ -210,14 +233,52 @@ class MediaController {
     }
 
     /**
-     * Récupère l'illustration envoyée dans $_FILES['illustration'], si l'utilisateur en a choisi une.
-     * @return array|null L'entrée de $_FILES, ou null si aucun fichier n'a été envoyé.
+     * Traite l'upload optionnel d'une illustration envoyée dans $_FILES['illustration'].
+     * @return array{0: string|null, 1: string|null} Nom du fichier stocké et message d'erreur.
      */
-    private static function getIllustrationUpload(): ?array {
+    private static function handleIllustrationUpload(): array {
         if (!isset($_FILES['illustration']) || $_FILES['illustration']['error'] === UPLOAD_ERR_NO_FILE) {
-            return null;
+            return [null, null];
         }
-        return $_FILES['illustration'];
+
+        $file = $_FILES['illustration'];
+
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            return [null, "Erreur lors de l'envoi de l'illustration."];
+        }
+
+        if ($file['size'] > self::ILLUSTRATION_MAX_SIZE) {
+            return [null, "L'illustration ne doit pas dépasser 2 Mo."];
+        }
+
+        $mimeType = mime_content_type($file['tmp_name']);
+
+        if (!isset(self::ILLUSTRATION_MIME_TYPES[$mimeType])) {
+            return [null, "L'illustration doit être une image (JPEG, PNG, WEBP ou GIF)."];
+        }
+
+        $directory = ROOT . self::ILLUSTRATION_DIR;
+        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+            return [null, "Impossible de créer le dossier de stockage des illustrations."];
+        }
+
+        $filename = uniqid('media_', true) . '.' . self::ILLUSTRATION_MIME_TYPES[$mimeType];
+
+        if (!move_uploaded_file($file['tmp_name'], $directory . $filename)) {
+            return [null, "Impossible d'enregistrer l'illustration."];
+        }
+
+        return [$filename, null];
+    }
+
+    /**
+     * Supprime un fichier d'illustration du dossier de stockage, s'il existe.
+     */
+    private static function deleteIllustrationFile(string $filename): void {
+        $path = ROOT . self::ILLUSTRATION_DIR . $filename;
+        if (is_file($path)) {
+            unlink($path);
+        }
     }
 
     /**

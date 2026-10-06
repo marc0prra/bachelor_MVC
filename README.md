@@ -22,7 +22,7 @@ Elle permet de consulter, rechercher et trier le catalogue de médias publiqueme
 - **Authentification** : inscription, connexion, déconnexion. Mot de passe soumis à une politique de sécurité (8 caractères min., majuscule, minuscule, chiffre, caractère spécial, ne contenant pas le nom d'utilisateur).
 - **Gestion des médias** (réservée aux utilisateurs connectés) :
   - Ajout / modification / suppression de livres, films et albums, chacun avec ses champs spécifiques (nombre de pages, durée + genre, nombre de pistes + éditeur).
-  - Upload d'une illustration par média (JPEG/PNG/WEBP/GIF, 2 Mo max), stockée dans `uploads/` et tracée dans la table `Files` (voir [Gestion des fichiers](#gestion-des-fichiers)).
+  - Upload d'une illustration par média (JPEG/PNG/WEBP/GIF, 2 Mo max), stockée dans `assets/uploads/media/`.
   - Emprunt / retour d'un média, avec mise à jour de la disponibilité.
 - **Tableau de bord** : statistiques (total, disponibles, empruntés) et liste tabulaire des médias.
 - **Messages flash** : confirmation/erreur affichés après une action puis effacés (auto-disparition côté JS après quelques secondes).
@@ -37,7 +37,6 @@ bachelor_MVC/
 │   └── UserController.php     # Inscription, connexion, déconnexion
 ├── models/
 │   ├── Media.php               # Classe abstraite commune (Book/Movie/Album)
-│   ├── File.php                # Fichiers uploadés (table Files) : validation, stockage, suppression
 │   ├── Book.php / Movie.php / Album.php
 │   └── User.php
 ├── views/
@@ -47,14 +46,14 @@ bachelor_MVC/
 │   ├── library.php             # Médiathèque publique
 │   ├── dashboard.php           # Tableau de bord
 │   └── 404.html
-├── uploads/                    # Illustrations uploadées (contenu ignoré par git)
 ├── includes/
 │   ├── db_connect.php          # Connexion PDO
 │   ├── auth.php                # isAuthenticated() / requireAuth()
 │   └── flash.php               # Messages flash en session
 └── assets/
     ├── css/style.css
-    └── js/app.js
+    ├── js/app.js
+    └── uploads/media/          # Illustrations uploadées (ignoré par git)
 ```
 
 ## Routage
@@ -81,25 +80,6 @@ index.php?action=User/logout                                 → déconnexion
 
 Base `bachelorMVC`. Le schéma complet (tables, clés étrangères, contraintes) est disponible dans [`bachelorMVC.sql`](./bachelorMVC.sql) à la racine du projet.
 
-## Gestion des fichiers
-
-Chaque illustration est enregistrée dans la table `Files` :
-
-| Colonne | Rôle |
-|---|---|
-| `id` | Identifiant du fichier |
-| `media_id` | Média rattaché (`ON DELETE CASCADE`) |
-| `original_name` | Nom du fichier envoyé par l'utilisateur (affichage uniquement) |
-| `stored_name` | Nom unique généré côté serveur (`random_bytes`), utilisé sur le disque |
-| `size` | Taille en octets |
-| `mime_type` | Type MIME détecté côté serveur |
-| `uploaded_at` | Date d'envoi |
-| `uploaded_by` | Utilisateur ayant envoyé le fichier (`ON DELETE SET NULL`) |
-
-Vérifications côté serveur (`File::validateUpload`) : erreur d'envoi, taille réelle ≤ 2 Mo, type MIME lu dans le contenu du fichier (`finfo`, jamais l'extension ni le type annoncé par le navigateur) et image décodable (`getimagesize`). L'extension du fichier stocké est déduite du type détecté.
-
-Le fichier est validé **avant** toute écriture en base. Lors d'un remplacement, l'ancienne illustration n'est supprimée (base + disque) qu'une fois la nouvelle enregistrée. La suppression d'un média supprime aussi son fichier.
-
 ## Installation
 
 ### Prérequis
@@ -116,13 +96,13 @@ Le fichier est validé **avant** toute écriture en base. Lors d'un remplacement
    cd bachelor_MVC
    ```
 
-2. **Créer la base de données** en important le dump `bachelorMVC.sql` sur votre serveur MySQL/MariaDB. Sur une base créée avant l'ajout de la table `Files`, exécutez plutôt `migrations/001_create_files.sql`.
+2. **Créer la base de données** en important le dump `bachelorMVC.sql` (ou en exécutant le script SQL ci-dessus) sur votre serveur MySQL/MariaDB.
 
 3. **Configurer la connexion** dans `includes/db_connect.php` (hôte, utilisateur, mot de passe, nom de la base) selon votre environnement local.
 
 4. **Rendre le dossier d'uploads accessible en écriture**
    ```bash
-   chmod -R 755 uploads
+   chmod -R 755 assets/uploads/media
    ```
 
 5. **Lancer le serveur** depuis la racine du projet (celle-ci doit être la racine web, `index.php` compris) :

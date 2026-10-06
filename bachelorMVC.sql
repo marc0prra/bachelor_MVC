@@ -54,31 +54,6 @@ INSERT INTO `Book` (`id`, `pageNumber`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `Files`
---
-
-CREATE TABLE `Files` (
-  `id` int NOT NULL,
-  `media_id` int NOT NULL,
-  `original_name` varchar(255) NOT NULL,
-  `stored_name` varchar(255) NOT NULL,
-  `size` int UNSIGNED NOT NULL,
-  `mime_type` varchar(100) NOT NULL,
-  `uploaded_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `uploaded_by` int DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Déchargement des données de la table `Files`
---
-
-INSERT INTO `Files` (`id`, `media_id`, `original_name`, `stored_name`, `size`, `mime_type`, `uploaded_at`, `uploaded_by`) VALUES
-(3, 2, 'screencapture-github-mozartsduweb-PTO-paid-time-off-pull-67-2026-10-01-09_52_13.png', '718e969e73d5f0efa8c5510a4096eabb.png', 1640086, 'image/png', '2026-10-05 10:12:27', 10),
-(4, 7, 'screencapture-servjade-mdw-ovh-8443-smb-web-php-settings-id-44-2026-10-02-14_45_30.png', 'db6fb13b2d53d759506424c8fc821e3c.png', 644092, 'image/png', '2026-10-05 11:17:24', 10);
-
--- --------------------------------------------------------
-
---
 -- Structure de la table `Media`
 --
 
@@ -86,16 +61,17 @@ CREATE TABLE `Media` (
   `id` int NOT NULL,
   `titre` varchar(255) NOT NULL,
   `auteur` varchar(255) NOT NULL,
-  `disponible` tinyint(1) NOT NULL
+  `disponible` tinyint(1) NOT NULL,
+  `illustration` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Déchargement des données de la table `Media`
 --
 
-INSERT INTO `Media` (`id`, `titre`, `auteur`, `disponible`) VALUES
-(2, 'avenger', 'stan lee', 0),
-(7, 'yfsegduofbv', 'ejbfkbe', 0);
+INSERT INTO `Media` (`id`, `titre`, `auteur`, `disponible`, `illustration`) VALUES
+(2, 'avenger', 'stan lee', 0, NULL),
+(7, 'yfsegduofbv', 'ejbfkbe', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -173,15 +149,6 @@ ALTER TABLE `Book`
   ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `Files`
---
-ALTER TABLE `Files`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `stored_name` (`stored_name`),
-  ADD KEY `media_id` (`media_id`),
-  ADD KEY `uploaded_by` (`uploaded_by`);
-
---
 -- Index pour la table `Media`
 --
 ALTER TABLE `Media`
@@ -219,12 +186,6 @@ ALTER TABLE `Book`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT pour la table `Files`
---
-ALTER TABLE `Files`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
 -- AUTO_INCREMENT pour la table `Media`
 --
 ALTER TABLE `Media`
@@ -251,13 +212,6 @@ ALTER TABLE `Album`
 --
 ALTER TABLE `Book`
   ADD CONSTRAINT `fk_book_media` FOREIGN KEY (`id`) REFERENCES `Media` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Contraintes pour la table `Files`
---
-ALTER TABLE `Files`
-  ADD CONSTRAINT `fk_files_media` FOREIGN KEY (`media_id`) REFERENCES `Media` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_files_user` FOREIGN KEY (`uploaded_by`) REFERENCES `Users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `Movie`
